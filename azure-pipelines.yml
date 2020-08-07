@@ -1,0 +1,63 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- checkout: self
+- task: SonarQubePrepare@4
+  displayName: SonarqubeInitial
+  inputs:
+    SonarQube: 'sonarqube'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: vuejs-foundational-app
+    cliProjectName: vuejs-foundational-app
+    cliSources: src
+    extraProperties: |
+      sonar.java.source=.
+      sonar.java.binaries=.
+      sonar.language='js'
+      sonar.javascript.file.suffixes='.js'
+- task: SonarQubeAnalyze@4
+  displayName: SonarAnalysis
+- task: SonarQubePublish@4
+  displayName: SonarCodeQualityCheck
+  inputs:
+    pollingTimeoutSec: '300'
+- task: NodeTool@0
+  inputs:
+    versionSpec: '10.x'
+  displayName: 'Install Node.js'
+- task: Npm@1
+  displayName: 'npm install'
+  inputs:
+    command: 'install'
+- task: Npm@1
+  displayName: 'npm run build'
+  inputs:
+    command: 'custom'
+    customCommand: 'run build'
+- script: |
+    dir
+  displayName: 'list cwd contents (verify build)'
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish artifacts'
+  inputs:
+    PathtoPublish: 'D:\a\1\s\dist'
+    ArtifactName: 'vuejs-foundational-app'
+    publishLocation: 'Container'
+#- task: AzureFileCopy@2
+#  displayName: 'Deploy To Storage Account'
+#  inputs:
+#    SourcePath: 'D:\a\1\s\dist'
+#    azureSubscription: 'Devops_Gudiningstars-rg02'
+#    Destination: AzureBlob
+#    storage: vuejsapplication
+#    ContainerName: '$web'
